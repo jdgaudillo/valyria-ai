@@ -25,15 +25,15 @@ def downloadBlob(account_name, account_key, container, data_dir, blob_name):
 
 def uploadBlob(account_name, account_key, container, local_paths):
 	block_blob_service = BlockBlobService(account_name=account_name, account_key=account_key)
-
-	if len(local_paths) == 1:
+	
+	if type(local_paths) == str:
 		blob_files = local_paths.split("/")[-1]
 		blob_paths = os.path.join("dynamic", blob_files)
-
+		print(blob_paths)
 		print("Uploading {}".format(blob_paths))
-		block_blob_service.create_blob_from_path(container, blob_path, local_paths[i])
+		block_blob_service.create_blob_from_path(container, blob_paths, local_paths)
 
-	else:
+	elif type(local_paths) == list:
 		blob_files = [local_path.split("/")[-1] for local_path in local_paths]
 		blob_paths = [os.path.join("dynamic", blob_file) for blob_file in blob_files]
 

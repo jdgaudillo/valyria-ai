@@ -112,17 +112,17 @@ def preprocess():
 	save_file(vote_summary, os.path.join(processed_dir,'dynamic/vote_type_summary.csv'))
 
 
-	reg_summary = candidate_vote(results, 'REG_NAME', 'REGION', candidates, codes)
-	prv_summary = candidate_vote(results, 'PRV_NAME', 'PROVINCE', candidates, codes)
-	mun_summary = candidate_vote(results, 'PRV_MUN', 'MUNICIPALITY', candidates, codes)
-	candidate_summary = pd.concat([reg_summary, prv_summary, mun_summary], axis = 0)
-	save_file(candidate_summary, os.path.join(processed_dir, 'dynamic/vote_count.csv'))
+	# reg_summary = candidate_vote(results, 'REG_NAME', 'REGION', candidates, codes)
+	# prv_summary = candidate_vote(results, 'PRV_NAME', 'PROVINCE', candidates, codes)
+	# mun_summary = candidate_vote(results, 'PRV_MUN', 'MUNICIPALITY', candidates, codes)
+	# candidate_summary = pd.concat([reg_summary, prv_summary, mun_summary], axis = 0)
+	# save_file(candidate_summary, os.path.join(processed_dir, 'dynamic/vote_count.csv'))
 
 	e = time.time()
 	print('Total Duration of Preprocessing: ', (e-s)/60,'m and', (e-s)%60,'s')
 
-	return (os.path.join(processed_dir,'dynamic/vote_type_summary.csv'), os.path.join(processed_dir, 'dynamic/vote_count.csv'))
-	# return (os.path.join(processed_dir,'dynamic/vote_type_summary.csv'))
+	# return (os.path.join(processed_dir,'dynamic/vote_type_summary.csv'), os.path.join(processed_dir, 'dynamic/vote_count.csv'))
+	return os.path.join(processed_dir,'dynamic/vote_type_summary.csv')
 
 
 if __name__ == '__main__':
