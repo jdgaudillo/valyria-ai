@@ -26,7 +26,7 @@ def uploadBlob(account_name, account_key, container, local_paths):
 	block_blob_service = BlockBlobService(account_name=account_name, account_key=account_key)
 
 	blob_files = [local_path.split("/")[-1] for local_path in local_paths]
-	blob_paths = (os.path.join("dynamic", blob_file) for blob_file in blob_files)
+	blob_paths = [os.path.join("dynamic", blob_file) for blob_file in blob_files]
 
 	for i, blob_path in enumerate(blob_paths):
 		print("Uploading {}".format(blob_path))
