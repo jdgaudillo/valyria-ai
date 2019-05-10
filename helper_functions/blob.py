@@ -22,14 +22,15 @@ def downloadBlob(account_name, account_key, container, data_dir, blob_name):
 	return downloaded_file
 
 
-def uploadBlob(account_name, account_key, container, root):
+def uploadBlob(account_name, account_key, container, local_paths):
 	block_blob_service = BlockBlobService(account_name=account_name, account_key=account_key)
 
-	blob_file = "dynamic/results.csv"
-	blob_path = os.path.join(root, container, blob_file)
-	
-	print("Uploading {}".format(blob_file))
-	block_blob_service.create_blob_from_path(container, blob_file, upload_path)
+	blob_files = [local_path.split("/")[-1] for local_path in local_paths]
+	blob_paths = (os.path.join("dynamic", blob_file) for blob_file in blob_files)
+
+	for i, blob_path in enumerate(blob_paths):
+		print("Uploading {}".format(blob_path))
+		block_blob_service.create_blob_from_path(container, blob_path, local_paths[i])
 
 
 def extractBlob(source, dest):
