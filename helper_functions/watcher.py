@@ -39,11 +39,14 @@ class Handler(FileSystemEventHandler):
 
         elif event.event_type == 'created':
             # Take any action here when a file is first created.
-            print ("Received created event - %s." % event.src_path)
+            print ("Received created event - %s \n" % event.src_path)
             uploaded_file = event.src_path
 
             os.system("python anomaly_checking/duplicate.py")
-            #os.system("python run.py")
+            os.system("python anomaly_checking/disparity.py")
+            os.system("python anomaly_checking/voter_turnout_live.py")
+
+            os.system("python helper_functions/rename_and_save.py")
 
 
 if __name__ == "__main__":
