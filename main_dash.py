@@ -17,11 +17,11 @@ def to_run(num):
 	uploadBlob(account_name, account_key, container, local_paths)
 	print('Hi!', num)
 def sched_run():
-	s.enter(600, 1, to_run, ('1',))
-	s.enter(1200, 1, to_run, ('2',))
-	s.enter(1800, 1, to_run, ('3',))
-	s.enter(2400, 1, to_run, ('3',))
-	s.enter(3000, 1, to_run, ('3',))
+	s.enter(900, 1, to_run, ('1',))
+	s.enter(1800, 1, to_run, ('2',))
+	s.enter(2700, 1, to_run, ('3',))
+	s.enter(3600, 1, to_run, ('3',))
+	s.enter(4500, 1, to_run, ('3',))
 	s.run()
 if __name__ == '__main__':
 	sched_run()
