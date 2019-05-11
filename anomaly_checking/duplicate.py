@@ -8,11 +8,7 @@ import numpy as np
 
 import pandas as pd 
 
-
-def readCSV(file):
-	data = pd.read_csv(file, sep=",", dtype={"PRECINCT_CODE": str})
-	
-	return data
+from utils import readCSV
 
 
 def checkForDuplication(data, cols):
@@ -28,42 +24,50 @@ def logDuplicates(duplicates):
 	log_file = os.path.abspath("../Logs/duplicate_log.csv")
 
 	with open(log_file, "a+") as f:
-		duplicates.to_csv(f, index=False)
+		duplicates.to_csv(f, index=False, header=False)
 
 
-print("\n============RUNNING DUPLICATE SCRIPT===================\n")
+if __name__ == '__main__':
+	print("\n============RUNNING DUPLICATE SCRIPT===================\n")
 
-start_time = time.time()
+	start_time = time.time()
 
-blob_directory = os.path.abspath("../Blob-Containers")
-data_dir = os.path.join(blob_directory, "unprocessed")
+	blob_directory = os.path.abspath("../Blob-Containers")
+	data_dir = os.path.join(blob_directory, "unprocessed")
 
-results_file = os.path.join(data_dir, "results.csv")
-static_cols = ["PRECINCT_CODE", "CONTEST_CODE", "CANDIDATE_NAME", "PARTY_CODE"]
+	results_file = os.path.join(data_dir, "results.csv")
+	static_cols = ["PRECINCT_CODE", "CONTEST_CODE", "CANDIDATE_NAME", "PARTY_CODE"]
 
-results = readCSV(results_file)
+	unprocessed_files = glob.glob(data_dir + "/*_*.csv")
+	order = len(unprocessed_files)
 
-duplicates = checkForDuplication(results, static_cols)
+	col_types = {"PRECINCT_CODE": str, "VCM_ID": str}
+	cols = []
 
-if not len(duplicates):
-	print("No double transmission")
-	print("TOTAL RUNTIME:", time.time() - start_time)
-	print("\n============END OF DUPLICATE SCRIPT================\n")
+	results = readCSV(results_file, col_types, cols)
 
-else:
-	print("Flagged double transmission!")
+	duplicates = checkForDuplication(results, static_cols)
 
-	print("Number of duplicates found: {}".format(len(duplicates)/2), "\n")
-	print(duplicates)
+	if not len(duplicates):
+		print("No double transmission")
+		print("TOTAL RUNTIME:", time.time() - start_time)
+		print("\n============END OF DUPLICATE SCRIPT================\n")
 
-	if len(duplicates)%2 != 0:
-		print("\n*********NOTES!***********")
-		print("The detected double transmission has the same RECEPTION_DATE.\n")
+	else:
+		print("Flagged double transmission!")
 
-	logDuplicates(duplicates)
+		print("Number of duplicates found: {}".format(len(duplicates)/2), "\n")
+		
+		duplicates.loc[:, "DUPLICATE_INDEX"] = str(order)
 
-	print("TOTAL RUNTIME: ", time.time() - start_time, "")
-	print("\n================END OF DUPLICATE SCRIPT================\n")
-	
+		if len(duplicates)%2 != 0:
+			print("\n*********NOTES!***********")
+			print("The detected double transmission has the same RECEPTION_DATE.\n")
+
+		logDuplicates(duplicates)
+
+		print("TOTAL RUNTIME: ", time.time() - start_time, "")
+		print("\n================END OF DUPLICATE SCRIPT================\n")
+		
 	
 	
