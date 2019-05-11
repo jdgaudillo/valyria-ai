@@ -54,8 +54,8 @@ def addVoterTurnout(data):
 def logVoterTurnout(data):
 	log_file = os.path.abspath("../Logs/voter_turnout_log.csv")
 
-	with open(log_file, "a+") as f:
-		data.to_csv(f, index=False, header=False)
+	with open(log_file, "a+", encoding="utf-8") as f:
+		data.to_csv(f, header=False, index=False, encoding="utf-8")
 
 
 if __name__ == '__main__':

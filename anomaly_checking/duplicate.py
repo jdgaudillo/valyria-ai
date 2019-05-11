@@ -23,7 +23,7 @@ def checkForDuplication(data, cols):
 def logDuplicates(duplicates):
 	log_file = os.path.abspath("../Logs/duplicate_log.csv")
 
-	with open(log_file, "a+") as f:
+	with open(log_file, "a+", encoding="utf-8") as f:
 		duplicates.to_csv(f, index=False, header=False)
 
 
