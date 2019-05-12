@@ -12,19 +12,22 @@ from utils import readCSV
 
 
 def checkForDuplication(data, cols):
+
 	duplicates = data[data.duplicated(cols, keep=False)]
 
-	duplicates = duplicates.groupby(["RECEPTION_DATE", "PRECINCT_CODE"]).first()
+	duplicates = duplicates.groupby(["PRECINCT_CODE", "RECEPTION_DATE"]).first()
+
 	duplicates = duplicates.reset_index()
 
 	return duplicates
 	
 
 def logDuplicates(duplicates):
+
 	log_file = os.path.abspath("../Logs/duplicate_log.csv")
 
 	with open(log_file, "a+", encoding="utf-8") as f:
-		duplicates.to_csv(f, index=False, header=False)
+		duplicates.to_csv(f, index=False)
 
 
 if __name__ == '__main__':
@@ -57,6 +60,8 @@ if __name__ == '__main__':
 		print("Flagged double transmission!")
 
 		print("Number of duplicates found: {}".format(len(duplicates)/2), "\n")
+
+		print(duplicates.head())
 		
 		duplicates.loc[:, "DUPLICATE_INDEX"] = str(order)
 
