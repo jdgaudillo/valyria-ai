@@ -7,6 +7,7 @@ import numpy as np
 
 
 def findOldFile(files):
+
 	order = [int(file.split("_")[1].split(".")[0]) 
 			for file in files if "_" in file]
 
@@ -23,11 +24,14 @@ def readCSV(file, col_type, cols):
 
 
 def preprocessData(data):
+
 	data_dir = os.path.join(blob_directory, "processed/static")
 	precincts_file = os.path.join(data_dir, "precincts.csv")
 	col_type = {"VCM_ID": str}
 
 	precincts = readCSV(precincts_file, col_type, ["VCM_ID", "REG_NAME", "PRV_NAME", "MUN_NAME", "REGISTERED_VOTERS"])
+	
+	data = data.drop_duplicates(subset=["PRECINCT_CODE"])
 
 	data = data.merge(precincts, left_on = 'PRECINCT_CODE', right_on = 'VCM_ID', how = 'left')
 
@@ -39,8 +43,6 @@ def preprocessData(data):
 def addVoterTurnout(data):
 
 	merged_data = preprocessData(data)
-
-	merged_data = merged_data.drop_duplicates(subset=["PRECINCT_CODE"])
 	
 	merged_data.loc[:, "PERCENT_VOTER_TURNOUT"] = (merged_data.NUMBER_VOTERS / merged_data.REGISTERED_VOTERS) * 100.
 
@@ -51,11 +53,14 @@ def addVoterTurnout(data):
 	return mun_group
 
 
-def logVoterTurnout(data):
-	log_file = os.path.abspath("../Logs/voter_turnout_log.csv")
+def logVoterTurnout(data, order):
+	
+	log_file = os.path.abspath("../Logs/Voter-Turnout-Live/voter_turnout_" + str(order) + ".csv")
 
-	with open(log_file, "a+", encoding="utf-8") as f:
-		data.to_csv(f, header=False, index=False, encoding="utf-8")
+	with open(log_file, "w+", encoding="utf-8") as f:
+		data.to_csv(f, index=False, encoding="utf-8")
+
+	print("Successfully added log ", log_file.split("/")[-1])
 
 
 if __name__ == '__main__':
@@ -88,9 +93,7 @@ if __name__ == '__main__':
 
 	voter_turnout = addVoterTurnout(results.loc[old_shape[0]:])
 			
-	logVoterTurnout(voter_turnout)
-
-	print("Updated voter_turnout_log.csv file.")
+	logVoterTurnout(voter_turnout, order)
 
 	print("\nTOTAL RUNTIME: ", time.time() - start_time)
 
