@@ -42,8 +42,8 @@ class Handler(FileSystemEventHandler):
             print ("Received created event - %s \n" % event.src_path)
             uploaded_file = event.src_path
 
-            os.system("python3 anomaly_checking/duplicate.py")
             os.system("python3 anomaly_checking/disparity.py")
+            os.system("python3 anomaly_checking/duplicate.py")
             os.system("python3 anomaly_checking/voter_turnout_live.py")
 
             os.system("python3 helper_functions/rename_and_save.py")
