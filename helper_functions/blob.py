@@ -43,6 +43,7 @@ def uploadBlob(account_name, account_key, container, local_paths):
 
 
 def copyBlob(source, dest):
+
 	shutil.copy(source, dest)
 
 
@@ -50,13 +51,19 @@ def extractBlob(source, dest):
 	with ZipFile(source) as zipObj:
 		filenames = zipObj.namelist()
 
-		extract_file = source.split("/")[-1][:-4] + "/results.csv"
+		extracted_file = source.split("/")[-1][:-4] + "/results.csv"
 
-		print("Extracting file.................")
-		zipObj.extract(extract_file, dest)
-		print("Successfully extracted file!")
-		print("==============EXTRACT BLOB====================\n")
+		print("\n==============EXTRACT BLOB====================\n")
 
-	extract_file = os.path.join(dest, extract_file)
+		#zipObj.extract(extract_file, dest)
+		zipObj.extractall(dest)
+
+	extracted_file = os.path.join(dest, extracted_file)
 	dest = os.path.abspath("../Blob-Containers/unprocessed")
-	copyBlob(extract_file, dest)
+
+	copyBlob(extracted_file, dest)
+
+	print("Successfully extracted file!")
+	print("Creating a copy of ", extracted_file.split("/")[-2:], "to ", dest.split("/")[-1])
+	
+	print("\n==============EXTRACT BLOB====================\n")
