@@ -46,8 +46,8 @@ def getAnomalousRow(data_old, data_new):
 def logDisparity(disparity):
 	log_file = os.path.abspath("../Logs/disparity_log.csv")
 
-	with open(log_file, "a+") as f:
-		disparity.to_csv(f, index=False, header=False)
+	with open(log_file, "a+", encoding="utf-8") as f:
+		disparity.to_csv(f, index=False)
 		
 
 if __name__ == '__main__':
