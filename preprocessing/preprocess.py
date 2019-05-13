@@ -28,11 +28,12 @@ def initialize(unprocessed_dir, processed_dir):
 def prep_results(unprocessed_dir, precincts):
 	print('Prepping results.csv')
 	s = time.time()
-	df = pd.read_csv(os.path.join(unprocessed_dir,'results.csv'), encoding = 'utf-8', dtype = {'PRECINCT_CODE':str})
+	df = pd.read_csv(os.path.join(unprocessed_dir,'results_orig.csv'), encoding = 'utf-8', dtype = {'PRECINCT_CODE':str})
 	df = df.merge(precincts, left_on = 'PRECINCT_CODE', right_on = 'VCM_ID', how = 'left')
 	df = df.loc[df['REG_NAME'] != 'OAV']
 	df['PRV_MUN'] = df['PRV_NAME'] + '-' + df['MUN_NAME']
-	df['TURNOUT'] = (df['NUMBER_VOTERS']/df['REGISTERED_VOTERS'])
+	df['TURNOUT'] = df['NUMBER_VOTERS'].astype(float)/df['REGISTERED_VOTERS'].astype(float)
+	df.drop_duplicates(['PRECINCT_CODE'], inplace = True, keep = 'first')
 	e = time.time()
 	print('Total Duration of Prepping: ', (e-s)/60,'m and', (e-s)%60,'s')
 	
@@ -47,11 +48,22 @@ def summarize_candidate(df, col, candidates):
 	for key in keys:
 	    a = grouped.get_group(key)
 	    summarized_candidate.loc[key[0]][key[1]] = a.VOTES_AMOUNT.sum()
+	summarized_candidate.index.name = col
+	summarized_candidate.reset_index(inplace = True)
+	# if col == 'PRV_MUN':
+	# 	ncr_manila = summarized_candidate[summarized_candidate['PRV_MUN'].str.contains('NATIONAL CAPTIAL REGION - MANILA')]
+	# 	summarized_candidate = summarized_candidate[~summarized_candidate['PRV_MUN'].str.contains('NATIONAL CAPTIAL REGION - MANILA') == False]
+	# 	summarized_manila = {}
+	# 	summarized_manila['PRV_MUN'] = 'NATIONAL CAPITAL REGION - MANILA - MANILA'
+	# 	for candidate in candidates:
+	# 		summarized_manila[candidate] = ncr_manila[candidate].sum()
+	# 	summarized_manila = pd.DataFrame(summarized_manila, index =[0])
+	# 	summarized_candidate = pd.concat([summarized_candidate, summarized_manila], axis = 0)
 	e = time.time()
 	print('Total Duration of Summarization: ', (e-s)/60,'m and', (e-s)%60,'s')
-	summarized_candidate.index.name = col
+	
 
-	return summarized_candidate.reset_index()
+	return summarized_candidate
 
 def summarize(df, col, cols):
 	summarized = pd.DataFrame(index = df[col].unique().tolist(), columns = cols)
@@ -61,10 +73,9 @@ def summarize(df, col, cols):
 		a = grouped.get_group(key)
 		a.drop_duplicates(subset = ['PRECINCT_CODE'], keep = 'first', inplace = True)
 		for i in cols:
-			if col == 'TURNOUT':
-				summarized.loc[key]['TURNOUT'] = (a[i].sum()/(len(a)*1.0))*100
+			if i == 'TURNOUT':
+				summarized.loc[key]['TURNOUT'] = (a[i].sum()/(a.shape[0]*1.0))*100
 			summarized.loc[key][i] = a[i].sum()
-
 	summarized.index.name = col
 	return summarized.reset_index()
 
@@ -149,7 +160,12 @@ if __name__ == '__main__':
 
 	codes, candidates, precincts, reg_voters = initialize(unprocessed_dir, processed_dir)
 	results = prep_results(unprocessed_dir, precincts)
-	save_file(results, os.path.join(processed_dir, 'dynamic/results_with_turnout.csv'))
+	# save_file(results, os.path.join(processed_dir, 'dynamic/results_with_turnout.csv'))
+
+	mun_summary = candidate_vote(results, 'PRV_MUN', 'MUNICIPALITY', candidates, codes)
+	mun_summary['PRV_NAME'] = mun_summary['PRV_MUN'].apply(lambda x:re.search(r'(.*)-', x).group(1))
+	mun_summary['MUN_NAME'] = mun_summary['PRV_MUN'].apply(lambda x:re.search(r'.*-(.*)', x).group(1))
+	save_file(mun_summary, os.path.join(processed_dir, 'dynamic/vote_count_mun.csv'))
 
 	# vote_reg = vote_type('REG_NAME', 'REGION', reg_voters, results)
 	# vote_prv = vote_type('PRV_NAME', 'PROVINCE', reg_voters, results)
