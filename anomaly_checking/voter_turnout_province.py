@@ -69,34 +69,37 @@ def prep_results():
 	total_prec = readFile(os.path.join(static_dir, 'total_precincts_prv.csv'))
 	return results, total_prec
 
-def transmitted(time_stamp):
+def percentTransmitted(df, col, summarized, time_stamp):
+	df = df.loc[df[col] == 1].nlargest(10, 'PERCENT_TRANSMITTED')
+	df = df.merge(summarized, on = 'PRV_NAME', how = 'left')
+	df['value'] = df['value'].astype(float)
+	grouped = df.groupby('PRV_NAME')
+	keys = grouped.groups.keys()
+	df2 = []
+	for key in keys:
+		a = grouped.get_group(key)
+		a = a.nlargest(12, 'value')
+		df2.append(a)
+	df2 = pd.concat(df2)
+	df2['timestamp'] = time_stamp 
+	filename = col+'_top_12_'+time_stamp+'.csv'
+	saveFile(df2, os.path.join(dynamic_dir, filename))
+
+
+def transmitted(time_stamp, thres):
 	results, total_prec = prep_results()
 	counted_prec = count_prec(results, 'PRV_NAME')
 	counted_prec = counted_prec.merge(total_prec, on = 'PRV_NAME', how = 'left')
 	counted_prec['TOTAL_PRECINCTS'] = counted_prec['TOTAL_PRECINCTS'].astype(float)
 	counted_prec['PERCENT_TRANSMITTED'] = ((counted_prec['COUNT_TRANSMITTED_PREC']/counted_prec['TOTAL_PRECINCTS']*1.0)*100).astype(float)
-	counted_prec['TRANSMITTED_80'] = counted_prec['PERCENT_TRANSMITTED'].apply(lambda x: 1 if (x >= 80.0) else 0)
-	counted_prec['TRANSMITTED_60'] = counted_prec['PERCENT_TRANSMITTED'].apply(lambda x: 1 if (x >= 60.0) else 0)
-	counted_prec['TRANSMITTED_50'] = counted_prec['PERCENT_TRANSMITTED'].apply(lambda x: 1 if (x >= 50.0) else 0)
+	counted_prec['TRANSMITTED_THRES'] = counted_prec['PERCENT_TRANSMITTED'].apply(lambda x: 1 if (x >= thres) else 0)
 
 	reg_candidate_summary = summarize_candidate(results, 'PRV_NAME')
-	transmit_80 = counted_prec.loc[counted_prec['TRANSMITTED_80'] == 1].nlargest(10, 'PERCENT_TRANSMITTED')
-	transmit_80 = transmit_80.merge(reg_candidate_summary, on = 'PRV_NAME', how = 'left')
-	transmit_80['value'] = transmit_80['value'].astype(float)
-	grouped = transmit_80.groupby('PRV_NAME')
-	keys = grouped.groups.keys()
-	df = []
-	for key in keys:
-		a = grouped.get_group(key)
-		a = a.nlargest(12, 'value')
-		df.append(a)
-	df = pd.concat(df)
-	df['timestamp'] = time_stamp 
-	saveFile(df, os.path.join(dynamic_dir, 'transmitted_top12.csv'))
+	percentTransmitted(counted_prec, 'TRANSMITTED_THRES', reg_candidate_summary, time_stamp)
+	return counted_prec, reg_candidate_summary
+
 
 if __name__ == '__main__':
 	time_stamp = input('Enter time_stamp of COMELEC results: ')
-	transmitted(time_stamp)
-
-
-
+	thres = input('Enter threshold: ')
+	transmitted(time_stamp, thres)
