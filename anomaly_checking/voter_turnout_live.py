@@ -26,10 +26,12 @@ def readCSV(file, col_type, cols):
 def preprocessData(data):
 
 	data_dir = os.path.join(blob_directory, "processed/static")
-	precincts_file = os.path.join(data_dir, "precincts.csv")
+	precincts_file = os.path.join(data_dir, "reg_vote.csv")
 	col_type = {"VCM_ID": str}
 
-	precincts = readCSV(precincts_file, col_type, ["VCM_ID", "REG_NAME", "PRV_NAME", "MUN_NAME", "REGISTERED_VOTERS"])
+	precincts = readCSV(precincts_file, col_type, ["VCM_ID", "REG_NAME", "PRV_NAME", "MUN_NAME", "REGISTERED_VOTERS", "total_regvoters"])
+
+	#precincts.loc[:, "total_regvoters"] = precincts.REGISTERED_VOTERS.sum()
 
 	data = data.drop_duplicates(subset=["PRECINCT_CODE"])
 
@@ -39,13 +41,12 @@ def preprocessData(data):
 
 	return data
 
+
 def addVoterTurnout(df):
 
-	df.loc[:, "PERCENT_VOTER_TURNOUT"] = (df.NUMBER_VOTERS / df.REGISTERED_VOTERS) * 100.
-
-	voter_turnout = df.groupby(["REG_NAME", "PRV_NAME", "MUN_NAME"], sort=False)["NUMBER_VOTERS", "REGISTERED_VOTERS"].sum().reset_index()
-
-	voter_turnout.loc[:, "PERCENT_VOTER_TURNOUT"] = (voter_turnout.NUMBER_VOTERS / voter_turnout.REGISTERED_VOTERS) * 100.
+	voter_turnout = df.groupby(["REG_NAME", "PRV_NAME", "MUN_NAME", "total_regvoters"], sort=False)["NUMBER_VOTERS"].sum().reset_index()
+	
+	voter_turnout.loc[:, "PERCENT_VOTER_TURNOUT"] = (voter_turnout.NUMBER_VOTERS / voter_turnout.total_regvoters) * 100.
 
 	return voter_turnout
 
@@ -77,7 +78,7 @@ def addTransmittedPrecincts(df):
 
 
 def addColumns(data):
-	
+
 	voter_turnout = addVoterTurnout(data)
 	voter_turnout.loc[:, "try_key"] = voter_turnout.PRV_NAME + "-" + voter_turnout.MUN_NAME
 	voter_turnout = voter_turnout.set_index("try_key")
@@ -116,15 +117,6 @@ if __name__ == '__main__':
 
 	unprocessed_files = glob.glob(data_dir + "/*_*.csv")
 	order = len(unprocessed_files)
-
-	if order != 0:
-		old_file = findOldFile(unprocessed_files)
-
-		old_results = readCSV(old_file, col_type, cols)
-		old_shape = old_results.shape
-
-	else:
-		old_shape = [0, 10]
 
 	results = readCSV(results_file, col_type, cols)
 
